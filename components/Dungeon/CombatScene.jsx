@@ -3,8 +3,8 @@ import { useGameStore } from '../../state/GameState.jsx';
 import { useCombatLogic } from '../../hooks/useCombatLogic.js';
 import { useTurnSystem } from '../../hooks/useTurnSystem.js';
 
-/* @tweakable Whether to reverse the order of heroes. Set to false for correct order. */
-const reverseHeroOrder = false;
+/* @tweakable Whether to reverse the order of heroes. Set to true for correct order. */
+const reverseHeroOrder = true;
 
 function Character({ char, isActive, onTarget, isTargetable }) {
   const hpPercentage = (char.hp / char.maxHp) * 100;
