@@ -1,0 +1,67 @@
+--- a/components/Dungeon/CombatScene.jsx
++++ b/components/Dungeon/CombatScene.jsx
+@@ -3,6 +3,9 @@
+ import { useCombatLogic } from '../../hooks/useCombatLogic.js';
+ import { useTurnSystem } from '../../hooks/useTurnSystem.js';
+ 
++/* @tweakable Whether to reverse the order of heroes. Set to false for correct order. */
++const reverseHeroOrder = false;
++
+ const Character = ({ char, isActive, onTarget, isTargetable }) => {
+     const hpPercentage = (char.hp / char.maxHp) * 100;
+     const stressPercentage = char.stress ? (char.stress / char.maxStress) * 100 : 0;
+
+@@ -49,8 +52,10 @@
+ 
+     return (
+         <div className="combat-scene">
+             <div className="party">
+-                {heroes.map(hero => (
++                {[...heroes]
++                    .sort((a, b) => (reverseHeroOrder ? b.position - a.position : a.position - b.position))
++                    .map(hero => (
+                     <Character
+                         key={hero.combatId}
+                         char={hero}
+                         isActive={activeCharacter?.combatId === hero.combatId}
+                         onTarget={handleTargetSelect}
+                         isTargetable={isTargetable(hero)}
+                     />
+                 ))}
+             </div>
+             <div className="enemies">
+                 {enemies.map(enemy => (
+                     <Character
+                         key={enemy.combatId}
+                         char={enemy}
+                         isActive={activeCharacter?.combatId === enemy.combatId}
+                         onTarget={handleTargetSelect}
+                         isTargetable={isTargetable(enemy)}
+                     />
+                 ))}
+             </div>
+         </div>
+     );
+ };
+
+ export default function CombatScene() {
+     const { heroes, enemies } = useGameStore(state => ({ heroes: state.heroes, enemies: state.enemies }));
+     const { activeCharacter, isPlayerTurn } = useTurnSystem();
+     const { selectedSkill, handleTargetSelect } = useCombatLogic();
+
+     const isTargetable = (character) => {
+         if (!isPlayerTurn || !selectedSkill) return false;
+         
+         if (character.hp <= 0) return false;
+
+         if (selectedSkill.target === 'enemy' && character.type === 'enemy') return true;
+         if (selectedSkill.target === 'hero' && character.type === 'hero') {
+             // Can't heal a full health hero
+             if (selectedSkill.heal && character.hp === character.maxHp) return false;
+             // Cannot target afflicted heroes with stress attacks
+             if (selectedSkill.stress_damage && character.affliction) return false;
+             return true;
+         }
+         
+         return false;
+     };
